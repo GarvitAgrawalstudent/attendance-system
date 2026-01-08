@@ -132,65 +132,59 @@
 </div>
 
 <script>
-  const form = document.getElementById("attendanceForm");
-  const msg = document.getElementById("msg");
+const form = document.getElementById("attendanceForm");
+const msg = document.getElementById("msg");
 
-  form.addEventListener("submit", function(e) {
-    e.preventDefault();
+/* 🔴 YAHAN APNA GOOGLE SCRIPT WEB APP URL PASTE KARO */
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyJQb6I8LGdMJddq0N8DY-sjXIOh5UQaG26_k7EmPBF78QMvx7NQ5moSMcoOnegs9OQ/exec";
 
-    const record = {
-      name: document.getElementById("name").value,
-      cls: document.getElementById("class").value,
-      date: document.getElementById("date").value,
-      status: document.getElementById("status").value
-    };
+/* SUBMIT ATTENDANCE (STUDENT SIDE) */
+form.addEventListener("submit", function (e) {
+  e.preventDefault();
 
-    let records = JSON.parse(localStorage.getItem("attendanceRecords")) || [];
-    records.push(record);
-    localStorage.setItem("attendanceRecords", JSON.stringify(records));
+  const data = {
+    name: document.getElementById("name").value,
+    class: document.getElementById("class").value,
+    date: document.getElementById("date").value,
+    status: document.getElementById("status").value
+  };
 
+  fetch(WEB_APP_URL, {
+    method: "POST",
+    body: JSON.stringify(data)
+  })
+  .then(res => res.json())
+  .then(() => {
     msg.innerText = "Attendance Submitted Successfully!";
     form.reset();
+  })
+  .catch(() => {
+    msg.innerText = "Error! Please try again.";
   });
+});
 
-  function loadAttendance() {
-    const tableBody = document.querySelector("#attendanceTable tbody");
-    tableBody.innerHTML = "";
+/* LOAD ALL ATTENDANCE (ADMIN PANEL) */
+function loadAttendance() {
+  fetch(WEB_APP_URL + "?action=getData")
+    .then(res => res.json())
+    .then(records => {
+      const tableBody = document.querySelector("#attendanceTable tbody");
+      tableBody.innerHTML = "";
 
-    const records = JSON.parse(localStorage.getItem("attendanceRecords")) || [];
-
-    records.forEach(r => {
-      const row = `<tr>
-        <td>${r.name}</td>
-        <td>${r.cls}</td>
-        <td>${r.date}</td>
-        <td>${r.status}</td>
-      </tr>`;
-      tableBody.innerHTML += row;
+      records.forEach(r => {
+        const row = `
+          <tr>
+            <td>${r.name}</td>
+            <td>${r.class}</td>
+            <td>${r.date}</td>
+            <td>${r.status}</td>
+          </tr>`;
+        tableBody.innerHTML += row;
+      });
     });
-  }
-
-  function downloadCSV() {
-    const records = JSON.parse(localStorage.getItem("attendanceRecords")) || [];
-    if (records.length === 0) {
-      alert("No data available");
-      return;
-    }
-
-    let csv = "Name,Class/Age,Date,Status\n";
-    records.forEach(r => {
-      csv += `${r.name},${r.cls},${r.date},${r.status}\n`;
-    });
-
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "attendance.csv";
-    a.click();
-    window.URL.revokeObjectURL(url);
-  }
+}
 </script>
+
 
 </body>
 </html>
