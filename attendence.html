@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Online Attendance System – Pro</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #fff;
+    }
+    .wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      max-width: 1100px;
+      margin: auto;
+    }
+    .card {
+      background: #fff;
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #2a5298;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      margin-top: 15px;
+    }
+    button:hover { background: #1e3c72; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 8px;
+      text-align: center;
+      font-size: 14px;
+    }
+    th { background: #f2f2f2; }
+
+    .success {
+      color: green;
+      font-weight: bold;
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    @media(max-width: 768px) {
+      .wrapper { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Online Attendance System</h1>
+<h2>English Speaking Coaching</h2>
+
+<div class="wrapper">
+
+  <!-- STUDENT ATTENDANCE FORM -->
+  <div class="card">
+    <h3>Student Attendance</h3>
+    <form id="attendanceForm">
+      <label>Student Name</label>
+      <input type="text" id="name" required />
+
+      <label>Class / Age</label>
+      <input type="text" id="class" required />
+
+      <label>Date</label>
+      <input type="date" id="date" required />
+
+      <label>Status</label>
+      <select id="status" required>
+        <option value="Present">Present</option>
+        <option value="Absent">Absent</option>
+      </select>
+
+      <button type="submit">Submit Attendance</button>
+    </form>
+    <div class="success" id="msg"></div>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div class="card">
+    <h3>Admin Panel</h3>
+    <button onclick="loadAttendance()">Load Attendance</button>
+    <button onclick="downloadCSV()">Download Excel (CSV)</button>
+
+    <table id="attendanceTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Class/Age</th>
+          <th>Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  const form = document.getElementById("attendanceForm");
+  const msg = document.getElementById("msg");
+
+  form.addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const record = {
+      name: document.getElementById("name").value,
+      cls: document.getElementById("class").value,
+      date: document.getElementById("date").value,
+      status: document.getElementById("status").value
+    };
+
+    let records = JSON.parse(localStorage.getItem("attendanceRecords")) || [];
+    records.push(record);
+    localStorage.setItem("attendanceRecords", JSON.stringify(records));
+
+    msg.innerText = "Attendance Submitted Successfully!";
+    form.reset();
+  });
+
+  function loadAttendance() {
+    const tableBody = document.querySelector("#attendanceTable tbody");
+    tableBody.innerHTML = "";
+
+    const records = JSON.parse(localStorage.getItem("attendanceRecords")) || [];
+
+    records.forEach(r => {
+      const row = `<tr>
+        <td>${r.name}</td>
+        <td>${r.cls}</td>
+        <td>${r.date}</td>
+        <td>${r.status}</td>
+      </tr>`;
+      tableBody.innerHTML += row;
+    });
+  }
+
+  function downloadCSV() {
+    const records = JSON.parse(localStorage.getItem("attendanceRecords")) || [];
+    if (records.length === 0) {
+      alert("No data available");
+      return;
+    }
+
+    let csv = "Name,Class/Age,Date,Status\n";
+    records.forEach(r => {
+      csv += `${r.name},${r.cls},${r.date},${r.status}\n`;
+    });
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "attendance.csv";
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+</script>
+
+</body>
+</html>
