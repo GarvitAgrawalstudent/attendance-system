@@ -1,64 +1,146 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Online Attendance</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Online Attendance System – Pro</title>
   <style>
     body {
-      font-family: Arial;
-      background: #f2f2f2;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      min-height: 100vh;
+      margin: 0;
       padding: 20px;
+      color: #333;
     }
-    .box {
+    h1, h2 {
+      text-align: center;
+      color: #fff;
+    }
+    .wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      max-width: 1100px;
+      margin: auto;
+    }
+    .card {
       background: #fff;
       padding: 20px;
-      max-width: 400px;
-      margin: auto;
-      border-radius: 10px;
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
     }
     input, select, button {
       width: 100%;
       padding: 10px;
-      margin-top: 10px;
+      margin-top: 6px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
     }
     button {
-      background: green;
-      color: white;
+      background: #2a5298;
+      color: #fff;
       border: none;
+      cursor: pointer;
+      font-size: 15px;
+      margin-top: 15px;
     }
-    #msg {
+    button:hover { background: #1e3c72; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
       margin-top: 10px;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 8px;
+      text-align: center;
+      font-size: 14px;
+    }
+    th { background: #f2f2f2; }
+
+    .success {
       color: green;
       font-weight: bold;
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    @media(max-width: 768px) {
+      .wrapper { grid-template-columns: 1fr; }
     }
   </style>
 </head>
-
 <body>
 
-<div class="box">
-  <h2>Student Attendance</h2>
+<h1>Online Attendance System</h1>
+<h2>English Speaking Coaching</h2>
 
-  <input type="text" id="name" placeholder="Student Name" required>
-  <input type="text" id="class" placeholder="Class / Age" required>
-  <input type="date" id="date" required>
+<div class="wrapper">
 
-  <select id="status">
-    <option value="Present">Present</option>
-    <option value="Absent">Absent</option>
-  </select>
+  <!-- STUDENT ATTENDANCE FORM -->
+  <div class="card">
+    <h3>Student Attendance</h3>
+    <form id="attendanceForm">
+      <label>Student Name</label>
+      <input type="text" id="name" required />
 
-  <button onclick="submitAttendance()">Submit</button>
+      <label>Class / Age</label>
+      <input type="text" id="class" required />
 
-  <div id="msg"></div>
+      <label>Date</label>
+      <input type="date" id="date" required />
+
+      <label>Status</label>
+      <select id="status" required>
+        <option value="Present">Present</option>
+        <option value="Absent">Absent</option>
+      </select>
+
+      <button type="submit">Submit Attendance</button>
+    </form>
+    <div class="success" id="msg"></div>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div class="card">
+    <h3>Admin Panel</h3>
+    <button onclick="loadAttendance()">Load Attendance</button>
+    <button onclick="downloadCSV()">Download Excel (CSV)</button>
+
+    <table id="attendanceTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Class/Age</th>
+          <th>Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
 </div>
 
 <script>
-/* 🔴 YAHAN APNA GOOGLE SCRIPT LINK PASTE KARO */
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzqF0IQ4EMw5eUX05NobyCXfaMrV3LHJZog0RNeGPkyFXC-RCgtPMmOpHnoyqYeieA/exec";
+const form = document.getElementById("attendanceForm");
+const msg = document.getElementById("msg");
 
-function submitAttendance() {
+/* 🔴 YAHAN APNA GOOGLE SCRIPT WEB APP URL PASTE KARO */
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyJQb6I8LGdMJddq0N8DY-sjXIOh5UQaG26_k7EmPBF78QMvx7NQ5moSMcoOnegs9OQ/exec";
+
+/* SUBMIT ATTENDANCE (STUDENT SIDE) */
+form.addEventListener("submit", function (e) {
+  e.preventDefault();
 
   const data = {
     name: document.getElementById("name").value,
@@ -68,18 +150,43 @@ function submitAttendance() {
   };
 
   fetch(WEB_APP_URL, {
-    method: "POST",
-    body: JSON.stringify(data)
-  })
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(data)
+})
+
   .then(res => res.json())
   .then(() => {
-    document.getElementById("msg").innerText = "Attendance Submitted!";
+    msg.innerText = "Attendance Submitted Successfully!";
+    form.reset();
   })
   .catch(() => {
-    document.getElementById("msg").innerText = "Error! Try again";
+    msg.innerText = "Error! Please try again.";
   });
+});
+
+/* LOAD ALL ATTENDANCE (ADMIN PANEL) */
+function loadAttendance() {
+  fetch(WEB_APP_URL + "?action=getData")
+    .then(res => res.json())
+    .then(records => {
+      const tableBody = document.querySelector("#attendanceTable tbody");
+      tableBody.innerHTML = "";
+
+      records.forEach(r => {
+        const row = `
+          <tr>
+            <td>${r.name}</td>
+            <td>${r.class}</td>
+            <td>${r.date}</td>
+            <td>${r.status}</td>
+          </tr>`;
+        tableBody.innerHTML += row;
+      });
+    });
 }
 </script>
+
 
 </body>
 </html>
